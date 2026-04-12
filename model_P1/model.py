@@ -15,8 +15,8 @@ Usage pour les autres équipes (P2, P3, P4) :
 import torch
 import torch.nn as nn
 from typing import Optional
-from diffusion import GaussianDiffusion
-from unet import UNet
+from .diffusion import GaussianDiffusion
+from .unet import UNet
 
 
 class DPMModel(nn.Module):

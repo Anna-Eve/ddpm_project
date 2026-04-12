@@ -1,1 +1,7 @@
 .venv
+
+# Datasets
+data_f1/
+
+# Model checkpoints
+checkpoints/
