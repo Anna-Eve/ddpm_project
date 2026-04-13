@@ -14,3 +14,4 @@ logs/
 
 # Python
 __pycache__/
+model_epoch_50.pth
