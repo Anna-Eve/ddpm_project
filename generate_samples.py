@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from model_P1.model import DPMModel
 from sampling_P3.ddim import DDIMSampler
+from sampling_P3.sample import DDPMSampler
 from eval_P4.visualize import save_image_grid, save_denoising_gif, plot_denoising_steps, compare_real_vs_generated
 from eval_P4.metrics import pixel_stats, plot_loss_curve, save_images_for_fid
 from data_P2.dataset import charger_f1
@@ -52,14 +53,17 @@ def main():
     model.eval()
 
     betas = torch.linspace(0.0001, 0.02, CONFIG["T"])
-    sampler = DDIMSampler(model, CONFIG["T"], betas, torch.device(CONFIG["device"]))
+    # sampler = DDIMSampler(model, CONFIG["T"], betas, torch.device(CONFIG["device"]))
+    sampler = DDPMSampler(model, CONFIG["T"], betas, torch.device(CONFIG["device"]))
+
 
     os.makedirs("results", exist_ok=True)
 
     # 1. Générer les images
     print(f"\n Génération de {CONFIG['num_samples']} images...")
     shape = (CONFIG["num_samples"], CONFIG["channels"], CONFIG["image_size"], CONFIG["image_size"])
-    samples = sampler.sample(shape, ddim_steps=200)
+    # samples = sampler.sample(shape, ddim_steps=200)
+    samples = sampler.sample(shape)
 
     # 2. Grille d'images
     save_image_grid(samples, "results/generated_samples.png", nrow=4, title="Images générées par DDPM")
