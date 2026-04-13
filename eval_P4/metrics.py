@@ -2,6 +2,7 @@ import os
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
 from torchvision.utils import save_image
 
 # statistiques
@@ -80,26 +81,18 @@ def compare_experiments(experiments: dict, save_path: str = "eval_P4/outputs/com
     plt.close()
     print(f"[Metrics] Comparaison sauvegardée → {save_path}")
 
-# tests sur données simulées
 if __name__ == "__main__":
     print("Test de metrics.py avec données simulées\n")
 
     # Simule un batch d'images générées
-    fake_images = torch.randn(64, 1, 28, 28)
+    fake_images = torch.randn(64, 3, 64, 64)
     pixel_stats(fake_images)
 
-    # Simule une loss qui descend
-    fake_loss = [1.0 * np.exp(-i / 500) + 0.05 * np.random.randn()
-                 for i in range(2000)]
-    plot_loss_curve(fake_loss, "eval_P4/outputs/loss_curve.png")
-    plot_loss_curve_smoothed(fake_loss, window=50, save_path="eval_P4/outputs/loss_curve_smooth.png")
+    with open("logs/loss.csv", "r") as f:
+        rows = list(csv.DictReader(f))
+        loss_history = [float(r["loss_moyenne"]) for r in rows]
 
-    # Simule deux expériences
-    loss_exp1 = [0.8 * np.exp(-i / 400) + 0.03 * np.random.randn() for i in range(2000)]
-    loss_exp2 = [0.9 * np.exp(-i / 700) + 0.03 * np.random.randn() for i in range(2000)]
-    compare_experiments({"lr=1e-3": loss_exp1, "lr=1e-4": loss_exp2})
-
-    # Sauvegarde images pour FID
-    save_images_for_fid(fake_images, "eval_P4/fid_data/generated/")
+    plot_loss_curve(loss_history, "eval_P4/outputs/loss_curve.png")
+    plot_loss_curve_smoothed(loss_history, window=5, save_path="eval_P4/outputs/loss_curve_smooth.png")
 
     print("\nTous les tests ont passé.")

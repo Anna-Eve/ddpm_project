@@ -1,7 +1,16 @@
 .venv
+.pth
 
 # Datasets
 data_f1/
 
 # Model checkpoints
 checkpoints/
+
+# Sorties générées
+results/
+eval_P4/outputs/
+logs/
+
+# Python
+__pycache__/

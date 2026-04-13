@@ -5,13 +5,17 @@ import matplotlib.pyplot as plt
 import imageio
 from torchvision.utils import make_grid
 from PIL import Image
+import sys
+sys.path.insert(0, ".")
 
 # utilitaire interne
 def _to_uint8(tensor: torch.Tensor) -> np.ndarray:
     img = (tensor.clamp(-1, 1) + 1) / 2       # → [0, 1]
     img = (img * 255).byte().cpu().numpy()     # → [0, 255]
-    if img.ndim == 3 and img.shape[0] == 1:
-        img = img[0]                            # (1,H,W) → (H,W) pour images grises
+    if img.ndim == 3 and img.shape[0] == 3:
+        img = img.transpose(1, 2, 0)           # (3,H,W) → (H,W,3) pour RGB
+    elif img.ndim == 3 and img.shape[0] == 1:
+        img = img[0]                            # (1,H,W) → (H,W) pour gris
     return img
 
 # grille d'image générées
@@ -103,30 +107,3 @@ def compare_real_vs_generated(real: torch.Tensor,
     plt.savefig(save_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"[Visualize] Comparaison sauvegardée → {save_path}")
-
-# test rapide (données simulées)
-if __name__ == "__main__":
-    print("Test de visualize.py avec données simulées\n")
-
-    # Simule 64 images générées (bruit aléatoire pour tester)
-    fake_generated = torch.randn(64, 1, 28, 28)
-    fake_real      = torch.randn(64, 1, 28, 28)
-
-    # Test grille
-    save_image_grid(fake_generated, "eval_P4/outputs/test_grid.png", nrow=8, title="Test grille")
-
-    # Test GIF (simule 1000 frames de débruitage)
-    # Passage progressif de bruit pur (t=1000) vers "image" (t=0)
-    fake_frames = [
-        torch.randn(1, 28, 28) * (1 - i / 999) + torch.zeros(1, 28, 28) * (i / 999)
-        for i in range(1000)
-    ]
-    save_denoising_gif(fake_frames, "eval_P4/outputs/test_denoising.gif", fps=20)
-
-    # Test étapes
-    plot_denoising_steps(fake_frames, n_steps_shown=10, save_path="eval_P4/outputs/test_steps.png")
-
-    # Test comparaison
-    compare_real_vs_generated(fake_real, fake_generated, n=8)
-
-    print("\nTous les tests ont passé. Regarde dans eval_P4/outputs/")
