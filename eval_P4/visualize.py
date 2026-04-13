@@ -95,9 +95,11 @@ def compare_real_vs_generated(real: torch.Tensor,
 
     fig, axes = plt.subplots(2, n, figsize=(n * 1.5, 3.5))
     for i in range(n):
-        axes[0, i].imshow(real_01[i].squeeze().cpu().numpy(), cmap="gray")
+        # axes[0, i].imshow(real_01[i].squeeze().cpu().numpy(), cmap="gray")
+        axes[0, i].imshow(real_01[i].permute(1, 2, 0).cpu().numpy())
         axes[0, i].axis("off")
-        axes[1, i].imshow(gen_01[i].squeeze().cpu().numpy(), cmap="gray")
+        # axes[1, i].imshow(gen_01[i].squeeze().cpu().numpy(), cmap="gray")
+        axes[1, i].imshow(gen_01[i].permute(1, 2, 0).cpu().numpy())
         axes[1, i].axis("off")
 
     axes[0, 0].set_ylabel("Réel", fontsize=11, rotation=0, labelpad=40, va="center")
