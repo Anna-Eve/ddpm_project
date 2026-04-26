@@ -68,6 +68,11 @@ def main():
     # 2. Grille d'images
     save_image_grid(samples, "results/generated_samples.png", nrow=4, title="Images générées par DDPM")
 
+    # GIF + étapes de débruitage
+    frames = sampler.sample_with_steps(shape=(1, 3, 64, 64), n_steps=20)
+    save_denoising_gif(frames, "results/denoising.gif")
+    plot_denoising_steps(frames, n_steps_shown=10, save_path="results/denoising_steps.png")
+
     # 3. Métriques
     pixel_stats(samples)
     save_images_for_fid(samples, "results/fid_generated/")
