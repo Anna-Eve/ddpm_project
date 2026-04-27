@@ -1,6 +1,8 @@
 """
 Script pour générer des images avec le modèle entraîné.
 """
+from pyexpat import model
+
 import torch
 import sys
 import os
@@ -48,7 +50,8 @@ def main():
         num_res_blocks=CONFIG["num_res_blocks"],
         timesteps=CONFIG["T"],
     )
-    model.load_state_dict(checkpoint["model_state"])
+    key = "state_dict" if "state_dict" in checkpoint else "model_state"
+    model.load_state_dict(checkpoint[key])
     model.to(CONFIG["device"])
     model.eval()
 

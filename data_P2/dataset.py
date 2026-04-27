@@ -265,6 +265,55 @@ def charger_dataset(batch_size):
         raise ValueError(f"Dataset inconnu : '{DATASET_CHOISI}'")
 
 
+
+# scrape_f1.py — à mettre à la racine du projet
+from ddgs import DDGS
+import requests, os
+from PIL import Image
+from io import BytesIO
+import time
+
+ECURIES = {
+    "ferrari":      "Ferrari F1 car 2023 race",
+    "mercedes":     "Mercedes F1 car 2023 race",
+    "redbull":      "Red Bull F1 car 2023 race",
+    "mclaren":      "McLaren F1 car 2023 race",
+    "alpine":       "Alpine F1 car 2023 race",
+    "astonmartin":  "Aston Martin F1 car 2023 race",
+    "haas":         "Haas F1 car 2023 race",
+    "williams":     "Williams F1 car 2023 race",
+    "alfaromeo":    "Alfa Romeo F1 car 2023 race",
+    "alphatauri":   "AlphaTauri F1 car 2023 race",
+}
+
+def scraper(ecurie, query, n=50):
+    dossier = f"./data_f1/train/{ecurie}"
+    os.makedirs(dossier, exist_ok=True)
+    existants = len(os.listdir(dossier))
+
+    with DDGS() as ddgs:
+        resultats = list(ddgs.images(query, max_results=n))
+
+    telecharges = 0
+    for i, r in enumerate(resultats):
+        try:
+            response = requests.get(r["image"], timeout=5)
+            img = Image.open(BytesIO(response.content)).convert("RGB")
+            chemin = f"{dossier}/scraped_{existants+i:04d}.jpg"
+            img.save(chemin)
+            telecharges += 1
+        except Exception:
+            continue
+
+    print(f"{ecurie} : +{telecharges} images")
+
+if __name__ == "__main__":
+    for ecurie, query in ECURIES.items():
+        scraper(ecurie, query, n=50)
+        time.sleep(10) 
+    print("\nTerminé — relance l'entraînement !")
+
+"""    
 # TEST RAPIDE
 if __name__ == "__main__":
     print(f"Test du dataset : {DATASET_CHOISI}")
@@ -277,4 +326,4 @@ if __name__ == "__main__":
     images, labels = next(iter(loader))
     print(f"Forme d'un batch : {images.shape}")
     print(f"Min / Max des pixels : {images.min():.2f} / {images.max():.2f}")
-    print("OK — le dataset fonctionne correctement")
+    print("OK — le dataset fonctionne correctement")"""
