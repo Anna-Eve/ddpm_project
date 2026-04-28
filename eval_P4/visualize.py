@@ -9,13 +9,24 @@ import sys
 sys.path.insert(0, ".")
 
 # utilitaire interne
+# def _to_uint8(tensor: torch.Tensor) -> np.ndarray:
+#     img = (tensor.clamp(-1, 1) + 1) / 2       # → [0, 1]
+#     img = (img * 255).byte().cpu().numpy()     # → [0, 255]
+#     if img.ndim == 3 and img.shape[0] == 3:
+#         img = img.transpose(1, 2, 0)           # (3,H,W) → (H,W,3) pour RGB
+#     elif img.ndim == 3 and img.shape[0] == 1:
+#         img = img[0]                            # (1,H,W) → (H,W) pour gris
+#     return img
+
 def _to_uint8(tensor: torch.Tensor) -> np.ndarray:
-    img = (tensor.clamp(-1, 1) + 1) / 2       # → [0, 1]
-    img = (img * 255).byte().cpu().numpy()     # → [0, 255]
+    if tensor.ndim == 4:
+        tensor = tensor.squeeze(0)             # (1,3,64,64) → (3,64,64)
+    img = (tensor.clamp(-1, 1) + 1) / 2
+    img = (img * 255).byte().cpu().numpy()
     if img.ndim == 3 and img.shape[0] == 3:
-        img = img.transpose(1, 2, 0)           # (3,H,W) → (H,W,3) pour RGB
+        img = img.transpose(1, 2, 0)           # (3,H,W) → (H,W,3)
     elif img.ndim == 3 and img.shape[0] == 1:
-        img = img[0]                            # (1,H,W) → (H,W) pour gris
+        img = img[0]                            # (1,H,W) → (H,W)
     return img
 
 # grille d'image générées
