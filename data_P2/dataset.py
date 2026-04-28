@@ -1,31 +1,21 @@
-
-# Ce fichier gère TOUT ce qui touche aux données.
-# Il supporte plusieurs datasets — change juste DATASET_CHOISI
-# en bas du fichier pour switcher.
-
-# Datasets disponibles :
-#   - "mnist"         chiffres 28x28          (le plus léger)
-#   - "fashion"       vêtements 28x28         (un peu plus dur)
-#   - "cifar10"       photos couleur 32x32    (plus ambitieux)
-#   - "data_f1"       image de F1             (voir bas du fichier) 
-
-
 import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
 from PIL import Image
 import os
-
+from ddgs import DDGS
+import requests
+from io import BytesIO
+import time
  
 ECURIES = [
     "alfaromeo", "alphatauri", "alpine", "astonmartin",
     "ferrari", "haas", "mclaren", "mercedes", "redbull", "williams"
 ]
 
-# TRANSFORMATIONS — préparer les images pour le modèle
+# Préparer les images pour le modèle
 def get_transform(image_size, channels):
     """
-    Prépare les images :
       - redimensionner à la bonne taille
       - convertir en tensor
       - normaliser entre -1 et 1 (obligatoire pour DDPM)
@@ -35,7 +25,7 @@ def get_transform(image_size, channels):
         transforms.ToTensor(),
     ]
 
-    # Normalisation : 0.5 moyenne, 0.5 écart-type → valeurs entre -1 et 1
+    # Normalisation 
     if channels == 1:
         transform_list.append(transforms.Normalize((0.5,), (0.5,)))
     else:
@@ -46,8 +36,6 @@ def get_transform(image_size, channels):
 def get_transform_f1(image_size=64, mode="train"):
     """
     Augmentation agressive pour compenser le petit dataset F1.
-    images x ces transformations = ~10 000 variations vues
-    par le modèle au fil de l'entraînement.
 
         Deux modes :
       - "train" : augmentation activée
@@ -68,7 +56,7 @@ def get_transform_f1(image_size=64, mode="train"):
         transforms.ColorJitter(
             brightness=0.2,
             contrast=0.2,
-            saturation=0.3,    # les couleurs des livrées changent
+            saturation=0.3,   
             hue=0.05
         ),
         transforms.RandomAffine(
@@ -82,12 +70,8 @@ def get_transform_f1(image_size=64, mode="train"):
 
 
 
-# DATASETS PRÊTS À L'EMPLOI
+# Dataset pour test rapide
 def charger_mnist(batch_size, image_size=28):
-    """
-    MNIST — 60 000 chiffres manuscrits en niveaux de gris.
-    Le plus léger, idéal pour tester que tout fonctionne.
-    """
     transform = get_transform(image_size, channels=1)
     dataset   = datasets.MNIST(
         root="./data/raw", train=True,
@@ -99,9 +83,6 @@ def charger_mnist(batch_size, image_size=28):
 def charger_fashion_mnist(batch_size, image_size=28):
     """
     Fashion-MNIST — 60 000 images de vêtements (t-shirts, chaussures...).
-    Même format que MNIST mais plus visuellement intéressant.
-    10 classes : t-shirt, pantalon, pull, robe, manteau,
-                 sandale, chemise, basket, sac, bottine
     """
     transform = get_transform(image_size, channels=1)
     dataset   = datasets.FashionMNIST(
@@ -114,8 +95,6 @@ def charger_fashion_mnist(batch_size, image_size=28):
 def charger_cifar10(batch_size, image_size=32):
     """
     CIFAR-10 — 60 000 photos couleur (avions, voitures, chats...).
-    Plus lourd : nécessite un U-Net plus grand et plus de temps.
-    À tenter seulement si MNIST/Fashion marchent bien.
     """
     transform = get_transform(image_size, channels=3)
     dataset   = datasets.CIFAR10(
@@ -128,14 +107,6 @@ def charger_cifar10(batch_size, image_size=32):
 
 # DATASET F1
 class F1Dataset(Dataset):
-    """
-    Lit le dossier data_f1/train/ (ou test/) avec ses sous-dossiers
-    d'écuries, et applique l'augmentation à chaque image.
- 
-    On utilise ImageFolder de torchvision qui gère automatiquement
-    la structure sous-dossier → label.
-    """
- 
     def __init__(self, racine="./data_f1", split="train",
                  image_size=64, mode="train"):
  
@@ -148,7 +119,6 @@ class F1Dataset(Dataset):
                 f"Vérifie que data_f1/{split}/ existe bien."
             )
  
-        # ImageFolder lit automatiquement les sous-dossiers
         # chaque sous-dossier = une classe (écurie)
         self.dataset = datasets.ImageFolder(
             root=dossier,
@@ -163,8 +133,7 @@ class F1Dataset(Dataset):
  
     def __getitem__(self, idx):
         image, label = self.dataset[idx]
-        # On retourne le label aussi — utile pour P4 si elle veut
-        # faire de la génération conditionnelle par écurie
+        # On retourne le label aussi pour P4
         return image, label
 
 def charger_f1(batch_size=8, image_size=64, racine="./data_f1"):
@@ -201,7 +170,7 @@ def charger_f1(batch_size=8, image_size=64, racine="./data_f1"):
  
 def charger_f1_test(batch_size=32, image_size=64, racine="./data_f1"):
     """
-    Charge le split test SANS augmentation — pour évaluation (P4).
+    Charge le split test SANS augmentation pour évaluation (P4).
     """
     dataset = F1Dataset(
         racine=racine,
@@ -234,9 +203,6 @@ def _make_loader(dataset, batch_size):
     )
 
 
-# ============================================================
-# FONCTION PRINCIPALE — change juste cette ligne pour switcher
-# ============================================================
 
 DATASET_CHOISI = "custom"    # "mnist" | "fashion" | "cifar10" | "custom"
 
@@ -264,14 +230,6 @@ def charger_dataset(batch_size):
     else:
         raise ValueError(f"Dataset inconnu : '{DATASET_CHOISI}'")
 
-
-
-# scrape_f1.py — à mettre à la racine du projet
-from ddgs import DDGS
-import requests, os
-from PIL import Image
-from io import BytesIO
-import time
 
 ECURIES = {
     "ferrari":      "Ferrari F1 car 2023 race",

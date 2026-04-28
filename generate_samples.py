@@ -1,7 +1,7 @@
 """
 Script pour générer des images avec le modèle entraîné.
 """
-from pyexpat import model
+#from pyexpat import model
 
 import torch
 import sys
