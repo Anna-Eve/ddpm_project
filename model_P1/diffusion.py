@@ -20,7 +20,6 @@ class GaussianDiffusion(nn.Module):
         self.timesteps = timesteps
         self.device = device
 
-        # Variance schedule: linear from beta_start to beta_end
         self.betas = torch.linspace(beta_start, beta_end, timesteps, device=device)
         self.alphas = 1.0 - self.betas
         self.alphas_cumprod = torch.cumprod(self.alphas, dim=0)

@@ -6,7 +6,7 @@ import math
 
 class UNet(nn.Module):
     """
-    Simplified U-Net for DDPM.
+    U-Net for DDPM.
     """
 
     def __init__(
