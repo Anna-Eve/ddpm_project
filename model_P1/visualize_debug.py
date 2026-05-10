@@ -1,10 +1,3 @@
-"""
-Outils de debug pour visualiser des images générées par le DDPM.
-
-Ce fichier est volontairement séparé du code d'evaluation afin de servir
-uniquement au debug rapide pendant le développement.
-"""
-
 from __future__ import annotations
 
 import argparse

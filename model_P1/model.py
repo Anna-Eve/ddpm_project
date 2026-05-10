@@ -1,17 +1,3 @@
-"""
-Interface Principal - Model.py
-
-Boîte noire contenant :
-1. Le U-Net (réseau de neurones qui prédit le bruit)
-2. Le processus forward diffusion (ajouter du bruit)
-
-Usage pour les autres équipes (P2, P3, P4) :
-    from model import DPMModel
-    model = DPMModel(...)
-    x_t = model.add_noise(x_0, t)
-    noise_pred = model(x_t, t)
-"""
-
 import torch
 import torch.nn as nn
 from typing import Optional
@@ -23,7 +9,6 @@ class DPMModel(nn.Module):
     """
     Modèle complet DDPM = U-Net + Forward Diffusion Process.
     
-    C'est la classe que l'équipe d'entraînement (P2) va utiliser.
     """
     
     def __init__(
@@ -75,7 +60,6 @@ class DPMModel(nn.Module):
     ):
         """
         Ajoute du bruit à l'image x_0 à l'étape t.
-        C'est ce qu'utilise l'équipe P2 dans la boucle d'entraînement.
         
         Args:
             x_0 : image originale [B, C, H, W], valeurs dans [-1, 1] ou [0, 1]
@@ -109,14 +93,13 @@ class DPMModel(nn.Module):
         return self.timesteps
     
     def to(self, device: torch.device) -> "DPMModel":
-        """Déplacer le modèle vers un dispositif (CPU/GPU)."""
         self.device = device
         self.unet = self.unet.to(device)
         self.diffusion = self.diffusion.to(device)
         return self
     
     def get_optimizer_params(self) -> list:
-        """Retourne les paramètres à optimiser (pour P2 - entraînement)."""
+        """Retourne les paramètres à optimiser"""
         return self.unet.parameters()
 
     @torch.no_grad()
@@ -132,7 +115,6 @@ class DPMModel(nn.Module):
         return self.diffusion.p_sample_loop(self.unet, shape, device=self.device)
 
 
-# Exemple d'utilisation pour les autres équipes
 if __name__ == "__main__":
     # P2 - Entraînement
     print("=== Exemple P2 : Entraînement ===")
@@ -152,6 +134,6 @@ if __name__ == "__main__":
     noise_pred = model(x_t, t)
     print(f"noise_pred shape: {noise_pred.shape}")
     
-    # Loss d'entraînement (P2 va implémenter ça)
+    # Loss d'entraînement
     loss = torch.nn.functional.mse_loss(noise_pred, noise_true)
     print(f"MSE Loss: {loss.item():.4f}")
